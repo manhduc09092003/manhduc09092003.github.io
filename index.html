@@ -1,265 +1,271 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The band</title>
-    <link rel="stylesheet" href="./assets/css/style.css">
-    <link rel="stylesheet" href="./assets/css/responsive.css">
-    <link rel="stylesheet" href="./assets/css/themify-icons-font/themify-icons/themify-icons.css">
-    <!-- link favicon html -->
-    <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTm_iG7lGi7kUnJWYlwQakj1InZAz6zLrZxxg&usqp=CAU" type="image/x-icon" />
-</head>
-<body>
-    <div id="main">
-        <div id="header">
-            <!-- begin: nav -->
-            <ul id="nav">
-                <li><a href="#">Home</a></li>
-                <li><a href="#band">Band</a></li>
-                <li><a href="#tour">Tour</a></li>
-                <li><a href="#contact">Contact</a></li>
-                <li>
-                    <a href="#">More <i class="around-down ti-angle-down"></i></a>
-                    <ul class="subnav">
-                        <li><a href="#band">Merchandise</a></li>
-                        <li><a href="#tour">Extras</a></li>
-                        <li><a href="#contact">Media</a></li>
-                    </ul>
-                </li>
-            </ul>
-            <!-- end: nav -->
-                <div class="search-btn">
-                    <i class="search-icon ti-search"></i>
-                </div>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+ <HEAD>
+  <TITLE> :3 </TITLE>
+  <META NAME="Generator" CONTENT="EditPlus">
+  <META NAME="Author" CONTENT="">
+  <META NAME="Keywords" CONTENT="">
+  <META NAME="Description" CONTENT="">
+  <style>
+  html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background: #000;
+}
+canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.chu{
+    color: #ea80b0;
+    padding-top : 20%;
+    text-align: center;
+}
+  </style>
+ </HEAD>
+ 
+ <BODY>
+    
+  <canvas id="pinkboard"></canvas>
+  <h1 class="chu">Cương Xấu</h1>
+  <script>
+  /*
+ * Settings
+ */
+var settings = {
+  particles: {
+    length:   500, // maximum amount of particles
+    duration:   2, // particle duration in sec
+    velocity: 100, // particle velocity in pixels/sec
+    effect: -0.75, // play with this for a nice effect
+    size:      30, // particle size in pixels
+  },
+};
+ 
+ 
+(function(){var b=0;var c=["ms","moz","webkit","o"];for(var a=0;a<c.length&&!window.requestAnimationFrame;++a){window.requestAnimationFrame=window[c[a]+"RequestAnimationFrame"];window.cancelAnimationFrame=window[c[a]+"CancelAnimationFrame"]||window[c[a]+"CancelRequestAnimationFrame"]}if(!window.requestAnimationFrame){window.requestAnimationFrame=function(h,e){var d=new Date().getTime();var f=Math.max(0,16-(d-b));var g=window.setTimeout(function(){h(d+f)},f);b=d+f;return g}}if(!window.cancelAnimationFrame){window.cancelAnimationFrame=function(d){clearTimeout(d)}}}());
+ 
+/*
+ * Point class
+ */
+var Point = (function() {
+  function Point(x, y) {
+    this.x = (typeof x !== 'undefined') ? x : 0;
+    this.y = (typeof y !== 'undefined') ? y : 0;
+  }
+  Point.prototype.clone = function() {
+    return new Point(this.x, this.y);
+  };
+  Point.prototype.length = function(length) {
+    if (typeof length == 'undefined')
+      return Math.sqrt(this.x * this.x + this.y * this.y);
+    this.normalize();
+    this.x *= length;
+    this.y *= length;
+    return this;
+  };
+  Point.prototype.normalize = function() {
+    var length = this.length();
+    this.x /= length;
+    this.y /= length;
+    return this;
+  };
+  return Point;
+})();
+ 
+/*
+ * Particle class
+ */
+var Particle = (function() {
+  function Particle() {
+    this.position = new Point();
+    this.velocity = new Point();
+    this.acceleration = new Point();
+    this.age = 0;
+  }
+  Particle.prototype.initialize = function(x, y, dx, dy) {
+    this.position.x = x;
+    this.position.y = y;
+    this.velocity.x = dx;
+    this.velocity.y = dy;
+    this.acceleration.x = dx * settings.particles.effect;
+    this.acceleration.y = dy * settings.particles.effect;
+    this.age = 0;
+  };
+  Particle.prototype.update = function(deltaTime) {
+    this.position.x += this.velocity.x * deltaTime;
+    this.position.y += this.velocity.y * deltaTime;
+    this.velocity.x += this.acceleration.x * deltaTime;
+    this.velocity.y += this.acceleration.y * deltaTime;
+    this.age += deltaTime;
+  };
+  Particle.prototype.draw = function(context, image) {
+    function ease(t) {
+      return (--t) * t * t + 1;
+    }
+    var size = image.width * ease(this.age / settings.particles.duration);
+    context.globalAlpha = 1 - this.age / settings.particles.duration;
+    context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
+  };
+  return Particle;
+})();
+ 
+/*
+ * ParticlePool class
+ */
+var ParticlePool = (function() {
+  var particles,
+      firstActive = 0,
+      firstFree   = 0,
+      duration    = settings.particles.duration;
+ 
+  function ParticlePool(length) {
+    // create and populate particle pool
+    particles = new Array(length);
+    for (var i = 0; i < particles.length; i++)
+      particles[i] = new Particle();
+  }
+  ParticlePool.prototype.add = function(x, y, dx, dy) {
+    particles[firstFree].initialize(x, y, dx, dy);
+   
+    // handle circular queue
+    firstFree++;
+    if (firstFree   == particles.length) firstFree   = 0;
+    if (firstActive == firstFree       ) firstActive++;
+    if (firstActive == particles.length) firstActive = 0;
+  };
+  ParticlePool.prototype.update = function(deltaTime) {
+    var i;
+   
+    // update active particles
+    if (firstActive < firstFree) {
+      for (i = firstActive; i < firstFree; i++)
+        particles[i].update(deltaTime);
+    }
+    if (firstFree < firstActive) {
+      for (i = firstActive; i < particles.length; i++)
+        particles[i].update(deltaTime);
+      for (i = 0; i < firstFree; i++)
+        particles[i].update(deltaTime);
+    }
+   
+    // remove inactive particles
+    while (particles[firstActive].age >= duration && firstActive != firstFree) {
+      firstActive++;
+      if (firstActive == particles.length) firstActive = 0;
+    }
+   
+   
+  };
+  ParticlePool.prototype.draw = function(context, image) {
+    // draw active particles
+    if (firstActive < firstFree) {
+      for (i = firstActive; i < firstFree; i++)
+        particles[i].draw(context, image);
+    }
+    if (firstFree < firstActive) {
+      for (i = firstActive; i < particles.length; i++)
+        particles[i].draw(context, image);
+      for (i = 0; i < firstFree; i++)
+        particles[i].draw(context, image);
+    }
+  };
+  return ParticlePool;
+})();
+ 
+/*
+ * Putting it all together
+ */
+(function(canvas) {
+  var context = canvas.getContext('2d'),
+      particles = new ParticlePool(settings.particles.length),
+      particleRate = settings.particles.length / settings.particles.duration, // particles/sec
+      time;
+ 
+  // get point on heart with -PI <= t <= PI
+  function pointOnHeart(t) {
+    return new Point(
+      160 * Math.pow(Math.sin(t), 3),
+      130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
+    );
+  }
+ 
+  // creating the particle image using a dummy canvas
+  var image = (function() {
+    var canvas  = document.createElement('canvas'),
+        context = canvas.getContext('2d');
+    canvas.width  = settings.particles.size;
+    canvas.height = settings.particles.size;
+    // helper function to create the path
+    function to(t) {
+      var point = pointOnHeart(t);
+      point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
+      point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
+      return point;
+    }
+    // create the path
+    context.beginPath();
+    var t = -Math.PI;
+    var point = to(t);
+    context.moveTo(point.x, point.y);
+    while (t < Math.PI) {
+      t += 0.01; // baby steps!
+      point = to(t);
+      context.lineTo(point.x, point.y);
+    }
+    context.closePath();
+    // create the fill
+    context.fillStyle = '#ea80b0';
+    context.fill();
+    // create the image
+    var image = new Image();
+    image.src = canvas.toDataURL();
+    return image;
+  })();
+ 
+  // render that thing!
+  function render() {
+    // next animation frame
+    requestAnimationFrame(render);
+   
+    // update time
+    var newTime   = new Date().getTime() / 1000,
+        deltaTime = newTime - (time || newTime);
+    time = newTime;
+   
+    // clear canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
+   
+    // create new particles
+    var amount = particleRate * deltaTime;
+    for (var i = 0; i < amount; i++) {
+      var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+      var dir = pos.clone().length(settings.particles.velocity);
+      particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
+    }
+   
+    // update and draw particles
+    particles.update(deltaTime);
+    particles.draw(context, image);
+  }
+ 
+  // handle (re-)sizing of the canvas
+  function onResize() {
+    canvas.width  = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  }
+  window.onresize = onResize;
+ 
+  // delay rendering bootstrap
+  setTimeout(function() {
+    onResize();
+    render();
+  }, 10);
+})(document.getElementById('pinkboard'));
+  </script>
+ </BODY>
+</HTML>
+ 
 
-                <div id="mobile-menu" class="mobile-menu-btn">
-                    <i class="menu-icon ti-menu"></i>
-                </div>
-            <!-- begin: search -->
-        </div>
-
-        <div id="slider">
-            <div class="text-slide">
-                <h2 class="text-heading">Chicago</h2>
-                <!-- <div class="">
-                    Thank you, Chicago - A night we won't forget.
-                </div> -->
-                <p class="text-description">
-                    Thank you, Chicago - A night we won't forget.
-                </p>
-            </div>
-        </div>
-        
-        <div id="content">
-            <!-- THE BAND -->
-            <div id="band"  class="section">
-                <h2 class="heading-section">THE BAND</h2>
-                <p class="sub-heading-section">We love music</p>
-                <p class="about-section">We have created a fictional band website. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                <div class="row introduce-section">
-                    <div class="member-item col col-third text-center">
-                        <p class="name">Name</p>
-                        <img src="/assets/css/img/member/bandmember.jpg" alt="Name" class="img">
-                    </div>
-                    <div class="member-item col col-third text-center">
-                        <p class="name">Name</p>
-                        <img src="/assets/css/img/member/bandmember.jpg" alt="Name" class="img">
-                    </div>
-                    <div class="member-item col col-third text-center">
-                        <p class="name">Name</p>
-                        <img src="/assets/css/img/member/bandmember.jpg" alt="Name" class="img">
-                    </div>
-                   
-                </div>
-            </div>
-
-            <!-- TOUR DATES -->
-            <div id="tour" class="tour-section">
-                <div class="section">
-                    <h2 class="heading-section text-while">TOUR DATES</h2>
-                    <p class="sub-heading-section text-while">Remember to book your tickets!</p>
-                    
-                    <ul class="tickets-list">
-                        <li>September <span class="sold-out">Sold out</span></li>
-                        <li>October   <span class="sold-out">Sold out</span></li>
-                        <li>November  <span class="quantily">3</span></li>
-                    </ul>
-                    <div class="row list-place">
-                        <div class="col col-third mt-16px s-col-full">
-                            <img src="/assets/css/img/tickets/newyork.jpg" alt="New York" class="img-place">
-                            <div class="info-place">
-                                <h3 class="name-place">New York</h3>
-                                <p class="time-place">Fri 27 Nov 2016</p>
-                                <p class="des-place">Praesent tincidunt sed tellus ut rutrum sed vitae justo.</p>
-                                <button class="s-full-width buy-tickets-btn js-buy-ticket">Buy Tickets</button>
-                            </div>
-                        </div>
-                        <div class="col col-third mt-16px s-col-full">
-                            <img src="/assets/css/img/tickets/paris.jpg" alt="Paris" class="img-place">
-                            <div class="info-place">
-                                <h3 class="name-place">Paris</h3>
-                                <p class="time-place">Sat 28 Nov 2016</p>
-                                <p class="des-place">Praesent tincidunt sed tellus ut rutrum sed vitae justo.</p>
-                                <button class="s-full-width buy-tickets-btn js-buy-ticket">Buy Tickets</button>
-                            </div>
-                        </div>
-                        <div class="col col-third mt-16px s-col-full">
-                            <img src="/assets/css/img/tickets/sanfran.jpg" alt="San Francisco" class="img-place">
-                            <div class="info-place">
-                                <h3 class="name-place">San Francisco</h3>
-                                <p class="time-place">Sun 29 Nov 2016</p>
-                                <p class="des-place">Praesent tincidunt sed tellus ut rutrum sed vitae justo.</p>
-                                <button class="s-full-width buy-tickets-btn js-buy-ticket">Buy Tickets</button>
-                            </div>
-                        </div>
-                       
-                    </div>
-                </div>             
-            </div>
-            
-            <!-- CONTACT -->
-            <div id="contact" class="section" >
-                <h2 class="heading-section">CONTACT</h2>
-                <p class="sub-heading-section">Fan? Drop a note!</p>
-                
-                <div class="row contact-content">
-                    <div class="col col-half s-col-full contact-info">
-                        <p><i class="ti-location-pin"></i>Chicago, US</p>
-                        <p><i class="ti-mobile"></i>Phone: <a href="tel: +00 151515">+00 151515</a></p>
-                        <p><i class="ti-email"></i>Email: <a href="mailto:manhduc@gmail.com">Manhduc@gmail.com</a></p>
-                    </div>
-                    <div class="col col-half s-col-full contact-form">
-                        <form action="">
-                            <div class="row">
-                                <div class="col col-half s-col-full">
-                                    <input type="text" name="" id="" placeholder="Name" required class="form-control">
-                                </div>
-                                <div class="col col-half s-col-full s-mt-8">
-                                    <input type="email" name="" id="" placeholder="Email" required class="form-control">
-                                </div>
-                                
-                            </div>
-                            <div class="row mt-8px">
-                                <div class="col col-full ">
-                                    <input type="text" name="" id="" placeholder="Message" required class="form-control">
-                                </div>
-                            </div>
-                            <input type="submit" value="SEND" class="mt-16px submit-btn s-full-width">
-
-                        </form>
-                    </div>
-                   
-                </div>
-                
-            </div>
-
-            <!-- Map -->
-            <div class="map">
-                <img src="/assets/css/img/map/map (1).jpg" alt="map" class="img-map">
-            </div>
-
-        </div>
-
-        <div id="footer" class="text-center"> 
-            <div class="social">
-                <a href=""><i class="ti-facebook"></i></a>
-                <a href=""><i class="ti-instagram"></i></a>
-                <a href=""><i class="ti-youtube"></i></a>
-                <a href=""><i class="ti-pinterest"></i></a>
-                <a href=""><i class="ti-twitter-alt"></i></a>
-                <a href=""><i class="ti-linkedin"></i></a>
-            </div>
-            <p class="copy-right ">Powered by <a href="#">w3.css</a></p>
-        </div>
-    </div>
-    <div class="modal js-modal">
-        <div class="modal-container js-modal-container">
-            <div class="modal-close js-modal-close">
-                <i class="ti-close"></i>
-            </div>
-
-            <header class="modal-header">
-                <i class=" ti-bag" style="margin-right: 16px;"></i>
-                   Tickets
-            </header>
-
-            <div class="modal-body">
-                <label for="user-quality" class="modal-label">
-                    <i class="ti-shopping-cart"></i>
-                    Tickets, $15 per person
-                </label>
-                <input id="user-quality" type="text" class="modal-input " placeholder="How many ?">
-                <label for="user-email" class="modal-label">
-                    <i class="ti-user"></i>
-                    Send To
-                </label>
-                <input id="user-email" type="email" class="modal-input " placeholder="Enter email...">
-                
-                <button id="buy-tickets">
-                    Pay <i class="ti-check"></i>
-                </button>
-            </div>
-
-
-            <footer class="modal-footer">
-                Need <a href="#" >help?</a>
-            </footer>        
-        </div>    
-    </div>
-
-    <script>
-        var header = document.getElementById('header');
-        var mobileMenu = document.getElementById('mobile-menu');
-        var headerHeight = header.clientHeight;
-        // dong mo mobile menu
-        mobileMenu.onclick = function(){
-            var isClosed = header.clientHeight === headerHeight
-            if(isClosed) {
-                header.style.height = 'auto';
-            }
-            else{
-                header.style.height = null;
-                
-            }
-        }
-        // tu dong dong khi chon menu
-        var menuItems = document.querySelectorAll('#nav li a[href*="#"]') 
-        for( var i=0 ; i < menuItems.length ; i++) {
-            var menuItem = menuItems[i];
-            
-            menuItem.onclick = function(event) 
-            {
-                var isParentMenu = this.nextElementSibling && this.nextElementSibling.contains('subnav')
-                if(isParentMenu){
-                    event.preventDefault();
-                }else{
-                    header.style.height = null;
-                }
-            }
-        }
-    </script>
-
-    <script>
-        const buyBtns = document.querySelectorAll('.js-buy-ticket')
-        const modal = document.querySelector('.js-modal')
-        const close = document.querySelector('.js-modal-close')
-        const modalContainer = document.querySelector('.js-modal-container')
-        function showBuyTickets(){
-            modal.classList.add('open')
-        }
-        function closeBuyTickets(){
-            modal.classList.remove('open')
-        }
-        for( const buyBtn of buyBtns ) {
-            buyBtn.addEventListener('click',showBuyTickets)
-        } 
-        close.addEventListener('click',closeBuyTickets)
-        modal.addEventListener('click',closeBuyTickets)
-        modalContainer.addEventListener('click' ,function(event){
-             event.stopPropagation()
-        })
-    </script>
-</body>
-</html>
